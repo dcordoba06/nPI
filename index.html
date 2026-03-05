@@ -1,0 +1,1163 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Memoriza π</title>
+  <style>
+    :root{
+      --bg: #0b1220;
+      --panel: rgba(255,255,255,0.06);
+      --panel2: rgba(255,255,255,0.10);
+      --text: rgba(255,255,255,0.92);
+      --muted: rgba(255,255,255,0.70);
+      --danger: rgba(255,80,80,0.95);
+      --ok: rgba(110,255,170,0.95);
+      --cell: rgba(255,255,255,0.07);
+      --cellRevealed: rgba(255,255,255,0.14);
+      --outline: rgba(255,255,255,0.18);
+      --shadow: 0 10px 30px rgba(0,0,0,0.35);
+      --radius: 18px;
+    }
+
+    *{ box-sizing: border-box; }
+    body{
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color: var(--text);
+      background: radial-gradient(1200px 700px at 20% 10%, rgba(140,180,255,0.20), transparent 60%),
+                  radial-gradient(900px 600px at 85% 25%, rgba(110,255,170,0.10), transparent 55%),
+                  radial-gradient(1200px 900px at 50% 100%, rgba(255,255,255,0.08), transparent 65%),
+                  var(--bg);
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 18px;
+    }
+
+    .app{ width: min(1020px, 100%); display: grid; gap: 14px; }
+
+    header{
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 16px;
+      background: var(--panel);
+      border: 1px solid var(--outline);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .title{ display: grid; gap: 4px; }
+    .title h1{ margin: 0; font-size: clamp(18px, 2.2vw, 24px); letter-spacing: 0.2px; font-weight: 800; }
+    .title .sub{ color: var(--muted); font-size: 13px; }
+
+    .pi{ text-align: right; display: grid; gap: 6px; }
+    .pi .piLabel{ color: var(--muted); font-size: 12px; }
+
+    .pi .piValue{
+      font-size: clamp(26px, 3.2vw, 38px);
+      font-weight: 950;
+      letter-spacing: 0.6px;
+      line-height: 1;
+    }
+    .pi .piValue .dot{
+      opacity: 0.9;
+      margin-left: 2px;
+    }
+    .pi .piValue .tail{
+      font-size: 0.55em;
+      font-weight: 850;
+      color: rgba(255,255,255,0.75);
+      letter-spacing: 0.25px;
+    }
+
+    .grid2{ display: grid; grid-template-columns: 1.3fr 1fr; gap: 14px; }
+    @media (max-width: 900px){ .grid2{ grid-template-columns: 1fr; } }
+
+    .panel{
+      background: var(--panel);
+      border: 1px solid var(--outline);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 14px 16px;
+    }
+
+    .stats{ display: grid; gap: 10px; }
+
+    .statRow{ display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    @media (max-width: 520px){ .statRow{ grid-template-columns: 1fr; } }
+
+    .stat{
+      background: var(--panel2);
+      border: 1px solid var(--outline);
+      border-radius: 14px;
+      padding: 10px 12px;
+      display: grid;
+      gap: 2px;
+    }
+    .stat .k{ color: var(--muted); font-size: 12px; }
+    .stat .v{ font-weight: 900; font-size: 18px; letter-spacing: 0.3px; }
+
+    .statusLine{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding-top: 4px;
+    }
+    .statusText{ font-weight: 800; font-size: 14px; }
+    .hint{ color: var(--muted); font-size: 12px; }
+
+    .controls{ display: grid; gap: 10px; }
+    .btnRow{ display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+
+    button, select, input{ font: inherit; }
+
+    .btn{
+      border: 1px solid var(--outline);
+      background: rgba(255,255,255,0.10);
+      color: var(--text);
+      border-radius: 14px;
+      padding: 10px 12px;
+      cursor: pointer;
+      font-weight: 800;
+      letter-spacing: 0.2px;
+      transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+      user-select: none;
+    }
+    .btn:hover{ transform: translateY(-1px); background: rgba(255,255,255,0.14); border-color: rgba(255,255,255,0.25); }
+    .btn:active{ transform: translateY(0px); }
+    .btn.primary{ background: rgba(140,180,255,0.22); border-color: rgba(140,180,255,0.45); }
+    .btn.danger{ background: rgba(255,80,80,0.16); border-color: rgba(255,80,80,0.35); }
+
+    .toggle{
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      border: 1px solid var(--outline);
+      border-radius: 14px;
+      background: rgba(255,255,255,0.08);
+      cursor: pointer;
+      user-select: none;
+    }
+    .toggle input{ width: 18px; height: 18px; accent-color: rgba(140,180,255,0.95); cursor: pointer; }
+    .toggle span{ font-weight: 800; font-size: 13px; color: var(--text); }
+
+    .difficulty{ display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    .difficulty label{ color: var(--muted); font-size: 12px; font-weight: 700; }
+    select{
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid var(--outline);
+      background: rgba(255,255,255,0.08);
+      color: var(--text);
+      font-weight: 800;
+      outline: none;
+      cursor: pointer;
+      min-width: 180px;
+    }
+    select option{ color: #111; }
+
+    .userCodeRow{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+    .userCodeRow label{
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      min-width: 110px;
+    }
+    .input{
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid var(--outline);
+      background: rgba(255,255,255,0.08);
+      color: var(--text);
+      font-weight: 800;
+      outline: none;
+      min-width: 220px;
+    }
+    .input::placeholder{ color: rgba(255,255,255,0.45); }
+
+    .boardWrap{ position: relative; overflow: hidden; }
+
+    .board{
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(10, minmax(0, 1fr));
+      gap: clamp(6px, 1vw, 10px);
+      padding: 14px;
+      border-radius: var(--radius);
+      border: 1px solid var(--outline);
+      background: rgba(0,0,0,0.12);
+    }
+
+    .board::before{
+      content: "";
+      position: absolute;
+      top: 14px;
+      bottom: 14px;
+      left: calc(14px + (100% - 28px) * 0.5);
+      width: 2px;
+      background: rgba(255,255,255,0.16);
+      border-radius: 2px;
+      pointer-events: none;
+    }
+    .board::after{
+      content: "";
+      position: absolute;
+      left: 14px;
+      right: 14px;
+      top: calc(14px + (100% - 28px) * 0.5);
+      height: 2px;
+      background: rgba(255,255,255,0.16);
+      border-radius: 2px;
+      pointer-events: none;
+    }
+
+    .cell{
+      aspect-ratio: 1 / 1;
+      display: grid;
+      place-items: center;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: var(--cell);
+      font-weight: 900;
+      font-size: clamp(14px, 2.4vw, 20px);
+      letter-spacing: 0.3px;
+      position: relative;
+      transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+      user-select: none;
+    }
+
+    .cell .idx{
+      position: absolute;
+      top: 6px;
+      left: 8px;
+      font-size: 10px;
+      color: rgba(255,255,255,0.55);
+      font-weight: 800;
+      display: none;
+    }
+    .showIndex .cell .idx{ display: block; }
+
+    .cell.revealed{ background: var(--cellRevealed); border-color: rgba(255,255,255,0.20); }
+
+    .cell.next{
+      border-color: rgba(140,180,255,0.75);
+      box-shadow: 0 0 0 3px rgba(140,180,255,0.16);
+    }
+
+    .cell.last{ animation: pop 260ms ease-out; }
+    @keyframes pop{
+      0%{ transform: scale(1); }
+      45%{ transform: scale(1.09); }
+      100%{ transform: scale(1); }
+    }
+
+    .cell.peek{
+      background: rgba(255,80,80,0.18);
+      border-color: rgba(255,80,80,0.55);
+      box-shadow: 0 0 0 3px rgba(255,80,80,0.12);
+    }
+    .cell.peek .val{
+      color: var(--danger);
+      text-shadow: 0 0 12px rgba(255,80,80,0.25);
+    }
+
+    .feedback{ display: grid; gap: 10px; }
+    .msg{
+      background: var(--panel2);
+      border: 1px solid var(--outline);
+      border-radius: 14px;
+      padding: 12px;
+      display: grid;
+      gap: 6px;
+      min-height: 78px;
+    }
+    .msg .big{ font-weight: 950; font-size: 16px; }
+    .msg .small{ color: var(--muted); font-size: 12px; line-height: 1.35; }
+
+    .pill{
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--outline);
+      background: rgba(255,255,255,0.08);
+      font-weight: 900;
+      font-size: 12px;
+      width: fit-content;
+    }
+    .pill .dot{ width: 9px; height: 9px; border-radius: 99px; background: rgba(255,255,255,0.5); }
+    .pill.ok .dot{ background: var(--ok); }
+    .pill.bad .dot{ background: var(--danger); }
+
+    .shake{ animation: shake 260ms ease-in-out; }
+    @keyframes shake{
+      0%, 100%{ transform: translateX(0); }
+      20%{ transform: translateX(-7px); }
+      40%{ transform: translateX(6px); }
+      60%{ transform: translateX(-5px); }
+      80%{ transform: translateX(4px); }
+    }
+
+    .footerNote{ color: rgba(255,255,255,0.55); font-size: 12px; text-align: center; padding: 6px 0 0; }
+
+    .kbd{
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(255,255,255,0.08);
+      font-weight: 900;
+      font-size: 11px;
+      vertical-align: 1px;
+    }
+
+    .disabled{
+      opacity: 0.65;
+      filter: saturate(0.85);
+      pointer-events: none;
+    }
+
+    /* Ranking */
+    .rank{
+      margin-top: 8px;
+      border-top: 1px solid rgba(255,255,255,0.10);
+      padding-top: 10px;
+      display: none;
+      gap: 10px;
+    }
+    .rank.show{ display: grid; }
+    .rankHead{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .rankHead .left{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+    .rankSmall{ color: var(--muted); font-size: 12px; }
+    .table{
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.14);
+    }
+    .table th, .table td{
+      text-align: left;
+      padding: 10px 12px;
+      font-size: 13px;
+      border-bottom: 1px solid rgba(255,255,255,0.10);
+    }
+    .table th{
+      color: rgba(255,255,255,0.80);
+      font-weight: 900;
+      background: rgba(255,255,255,0.06);
+    }
+    .table tr:last-child td{ border-bottom: none; }
+    .rightCell{ text-align: right; }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+  </style>
+</head>
+
+<body>
+  <div class="app" id="app">
+    <header>
+      <div class="title">
+        <h1>Memoriza π</h1>
+        <div class="sub">Escribí los decimales en orden. Separadores visuales cada 5 dígitos.</div>
+      </div>
+
+      <div class="pi" aria-label="Valor de pi">
+        <div class="piLabel">π</div>
+        <div class="piValue">
+          <span class="three">3</span><span class="dot">.</span><span class="tail" id="piTail" aria-hidden="true"></span>
+        </div>
+      </div>
+    </header>
+
+    <div class="grid2">
+      <section class="panel stats" aria-label="Panel de estado y controles">
+        <div class="statRow">
+          <div class="stat">
+            <div class="k">Aciertos</div>
+            <div class="v"><span id="correctCount">0</span> / <span id="totalCells">100</span></div>
+          </div>
+          <div class="stat">
+            <div class="k">Intentos</div>
+            <div class="v"><span id="mistakesRemaining">5</span> / <span id="mistakesTotal">5</span></div>
+          </div>
+        </div>
+
+        <div class="statRow">
+          <div class="stat">
+            <div class="k">Top score</div>
+            <div class="v"><span id="topScore">0</span></div>
+          </div>
+          <div class="stat">
+            <div class="k">Estado</div>
+            <div class="v" id="stateLabel">Listo</div>
+          </div>
+        </div>
+
+        <div class="statusLine">
+          <div class="statusText" id="statusText">Ingresá el código de usuario para iniciar.</div>
+          <div class="hint" id="hintText">Solo dígitos (0–9).</div>
+        </div>
+
+        <div class="controls" aria-label="Controles">
+          <div class="userCodeRow" aria-label="Código de usuario">
+            <label for="userCodeInput">Código de usuario</label>
+            <input class="input" id="userCodeInput" inputmode="numeric" autocomplete="off" placeholder="Ej.: 12345" />
+            <button class="btn" id="btnSetUser" aria-label="Guardar código de usuario">Guardar</button>
+          </div>
+
+          <div id="lockedArea">
+            <div class="btnRow">
+              <button class="btn primary" id="btnStart" aria-label="Iniciar juego">Iniciar</button>
+              <button class="btn danger" id="btnReset" aria-label="Reiniciar juego">Reiniciar</button>
+              <button class="btn" id="btnToggleRank" aria-label="Ver ranking">Ver ranking</button>
+            </div>
+
+            <div class="difficulty" aria-label="Dificultad">
+              <label for="difficultySelect">Dificultad</label>
+              <select id="difficultySelect" aria-label="Seleccionar dificultad">
+                <option value="easy">Fácil (10 intentos)</option>
+                <option value="normal" selected>Normal (5 intentos)</option>
+                <option value="hard">Difícil (3 intentos)</option>
+                <option value="god">Modo Dios (0 intentos)</option>
+              </select>
+            </div>
+
+            <div class="btnRow">
+              <label class="toggle" aria-label="Alternar sonido">
+                <input type="checkbox" id="soundToggle" />
+                <span>Sonido</span>
+              </label>
+
+              <label class="toggle" aria-label="Mostrar índices de casillas">
+                <input type="checkbox" id="indexToggle" />
+                <span>Mostrar índices (1–100)</span>
+              </label>
+
+              <label class="toggle" aria-label="Modo práctica sin consumir intentos">
+                <input type="checkbox" id="practiceToggle" />
+                <span>Modo práctica</span>
+              </label>
+            </div>
+
+            <!-- Ranking local -->
+            <div class="rank" id="rankPanel" aria-label="Ranking local">
+              <div class="rankHead">
+                <div class="left">
+                  <div class="rankSmall">Ranking local (este navegador)</div>
+                  <input class="input mono" id="rankSearch" placeholder="Buscar código…" style="min-width:220px" />
+                </div>
+                <div class="btnRow">
+                  <button class="btn" id="btnSortRank">Ordenar: score ↓</button>
+                  <button class="btn danger" id="btnClearRank">Borrar ranking</button>
+                </div>
+              </div>
+
+              <table class="table" aria-label="Tabla de ranking">
+                <thead>
+                  <tr>
+                    <th style="width:70%">Usuario</th>
+                    <th class="rightCell" style="width:30%">Top score</th>
+                  </tr>
+                </thead>
+                <tbody id="rankBody"></tbody>
+              </table>
+
+              <div class="rankSmall">Nota: el ranking se guarda en <span class="mono">localStorage</span>. No se comparte entre dispositivos.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="feedback" aria-label="Retroalimentación">
+          <div class="msg" id="msgBox">
+            <div class="big" id="bigMsg">Configuración requerida.</div>
+            <div class="small" id="smallMsg">Ingresá el código de usuario. El top score se guarda por usuario.</div>
+          </div>
+          <div class="pill" id="pill">
+            <span class="dot" aria-hidden="true"></span>
+            <span id="pillText">Esperando…</span>
+          </div>
+        </div>
+
+        <div class="footerNote">
+          Atajos: <span class="kbd">Enter</span> iniciar/reiniciar · <span class="kbd">Esc</span> reinicio rápido
+        </div>
+      </section>
+
+      <section class="panel boardWrap" aria-label="Tablero de juego">
+        <div class="board" id="board" role="grid" aria-label="Cuadrícula de dígitos de pi"></div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const PI_DECIMALS =
+      "14159265358979323846264338327950288419716939937510" +
+      "58209749445923078164062862089986280348253421170679" +
+      "82148086513282306647093844609550582231725359408128" +
+      "48111745028410270193852110555964462294895493038196" +
+      "44288109756659334461284756482337867831652712019091" +
+      "45648566923460348610454326648213393607260249141273" +
+      "72458700660631558817488152092096282925409171536436" +
+      "78925903600113305305488204665213841469519415116094";
+
+    const BOARD_SIZE = 10;
+    const TOTAL_CELLS = BOARD_SIZE * BOARD_SIZE;
+
+    const START_INDEX = 0;
+    const GUESSABLE_CELLS = TOTAL_CELLS;
+    const PEEK_ON_LOSS = 5;
+
+    const LS_KEYS = {
+      TOP_PREFIX: "pi_memory_top_score_by_user_v1:",
+      SOUND: "pi_memory_sound_v1",
+      SHOW_INDEX: "pi_memory_show_index_v1",
+      PRACTICE: "pi_memory_practice_v1",
+      DIFF: "pi_memory_difficulty_v1",
+      LAST_USER: "pi_memory_last_user_code_v1"
+    };
+
+    const state = {
+      mode: "idle",
+      boardDigits: "",
+      currentIndex: START_INDEX,
+      mistakesRemaining: 5,
+      mistakesTotal: 5,
+      topScore: 0,
+      lastRevealIndex: null,
+      soundEnabled: false,
+      showIndex: false,
+      practiceMode: false,
+      difficulty: "normal",
+      cells: [],
+      peekIndices: [],
+      userCode: "",
+      rankSort: "score_desc" // score_desc | user_asc
+    };
+
+    let audioCtx = null;
+
+    function ensureAudio(){
+      if (!audioCtx){
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === "suspended"){
+        audioCtx.resume().catch(()=>{});
+      }
+    }
+
+    function beep(type){
+      if (!state.soundEnabled) return;
+      try{
+        ensureAudio();
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = "sine";
+        const now = audioCtx.currentTime;
+        const freq = type === "ok" ? 740 : 220;
+        const dur = type === "ok" ? 0.08 : 0.12;
+
+        o.frequency.setValueAtTime(freq, now);
+        g.gain.setValueAtTime(0.0001, now);
+        g.gain.exponentialRampToValueAtTime(0.12, now + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+        o.connect(g);
+        g.connect(audioCtx.destination);
+        o.start(now);
+        o.stop(now + dur + 0.02);
+      }catch(_e){}
+    }
+
+    function clampInt(n, min, max){
+      n = Number.isFinite(n) ? Math.trunc(n) : min;
+      return Math.max(min, Math.min(max, n));
+    }
+
+    function getDifficultyAttempts(level){
+      if (level === "easy") return 10;
+      if (level === "hard") return 3;
+      if (level === "god") return 0;
+      return 5;
+    }
+
+    function getCorrectCount(){
+      return Math.max(0, state.currentIndex - START_INDEX);
+    }
+
+    function setMode(newMode){
+      state.mode = newMode;
+      const label = document.getElementById("stateLabel");
+      const map = { idle: "Listo", playing: "Jugando", won: "Ganó", lost: "Perdió" };
+      label.textContent = map[newMode] ?? newMode;
+    }
+
+    function setMessage(big, small, pillType, pillText){
+      document.getElementById("bigMsg").textContent = big;
+      document.getElementById("smallMsg").textContent = small;
+
+      const pill = document.getElementById("pill");
+      pill.classList.remove("ok", "bad");
+      if (pillType) pill.classList.add(pillType);
+      document.getElementById("pillText").textContent = pillText ?? "";
+    }
+
+    function shakeBoard(){
+      const wrap = document.querySelector(".boardWrap");
+      wrap.classList.remove("shake");
+      void wrap.offsetWidth;
+      wrap.classList.add("shake");
+    }
+
+    function normalizeUserCode(raw){
+      const s = String(raw || "").trim().slice(0, 24);
+      return s.replace(/[^a-zA-Z0-9_-]/g, "");
+    }
+
+    function topScoreKeyForUser(code){
+      return LS_KEYS.TOP_PREFIX + code;
+    }
+
+    function loadTopScoreForUser(code){
+      const v = parseInt(localStorage.getItem(topScoreKeyForUser(code)) || "0", 10);
+      return clampInt(v, 0, 99999);
+    }
+
+    function saveTopScoreForUser(code, score){
+      localStorage.setItem(topScoreKeyForUser(code), String(score));
+    }
+
+    function setLockedUI(isLocked){
+      const lockedArea = document.getElementById("lockedArea");
+      lockedArea.classList.toggle("disabled", isLocked);
+
+      const statusText = document.getElementById("statusText");
+      if (isLocked){
+        statusText.textContent = "Ingresá el código de usuario para iniciar.";
+      }
+    }
+
+    // ===== Tablero =====
+    function renderBoard(){
+      const board = document.getElementById("board");
+      board.innerHTML = "";
+      state.cells = [];
+
+      for (let i = 0; i < TOTAL_CELLS; i++){
+        const cell = document.createElement("div");
+        cell.className = "cell";
+        cell.setAttribute("role", "gridcell");
+        cell.setAttribute("aria-label", `Casilla ${i+1}`);
+        cell.dataset.index = String(i);
+
+        const idx = document.createElement("div");
+        idx.className = "idx";
+        idx.textContent = String(i + 1);
+
+        const val = document.createElement("div");
+        val.className = "val";
+        val.textContent = "•";
+
+        cell.appendChild(idx);
+        cell.appendChild(val);
+
+        board.appendChild(cell);
+        state.cells.push(cell);
+      }
+
+      updateBoardClasses();
+    }
+
+    function updateBoardClasses(){
+      const board = document.getElementById("board");
+      board.classList.toggle("showIndex", state.showIndex);
+
+      const peekSet = new Set(state.peekIndices);
+
+      for (let i = 0; i < TOTAL_CELLS; i++){
+        const cell = state.cells[i];
+        if (!cell) continue;
+
+        const valEl = cell.querySelector(".val");
+        cell.classList.remove("revealed", "next", "last", "peek");
+
+        const isRevealed = (i < state.currentIndex);
+        const isPeek = (state.mode === "lost" && peekSet.has(i));
+
+        if (isRevealed || isPeek){
+          cell.classList.add("revealed");
+          valEl.textContent = state.boardDigits[i];
+        } else {
+          valEl.textContent = "•";
+        }
+
+        if (state.mode === "playing" && i === state.currentIndex){
+          cell.classList.add("next");
+        }
+
+        if (state.lastRevealIndex === i){
+          cell.classList.add("last");
+        }
+
+        if (isPeek){
+          cell.classList.add("peek");
+        }
+      }
+    }
+
+    function revealCell(index){
+      state.lastRevealIndex = index;
+      updateBoardClasses();
+      setTimeout(() => {
+        if (state.lastRevealIndex === index){
+          state.lastRevealIndex = null;
+          updateBoardClasses();
+        }
+      }, 280);
+    }
+
+    function updateUI(){
+      document.getElementById("correctCount").textContent = String(getCorrectCount());
+      document.getElementById("totalCells").textContent = String(GUESSABLE_CELLS);
+      document.getElementById("mistakesRemaining").textContent = String(state.mistakesRemaining);
+      document.getElementById("mistakesTotal").textContent = String(state.mistakesTotal);
+      document.getElementById("topScore").textContent = String(state.topScore);
+
+      const statusText = document.getElementById("statusText");
+      const hintText = document.getElementById("hintText");
+
+      if (!state.userCode){
+        hintText.textContent = "El top score se guarda por usuario.";
+        updateBoardClasses();
+        return;
+      }
+
+      if (state.mode === "idle"){
+        statusText.innerHTML = `Presioná <span class="kbd">Iniciar</span> o <span class="kbd">Enter</span>.`;
+        hintText.textContent = "Teclado: solo dígitos (0–9).";
+      } else if (state.mode === "playing"){
+        statusText.textContent = "Escribí el siguiente dígito de π (después del punto).";
+        if (state.practiceMode){
+          hintText.textContent = "Modo práctica: no consume intentos al fallar.";
+        } else if (state.mistakesTotal === 0){
+          hintText.textContent = "Modo Dios: un solo fallo termina la partida.";
+        } else {
+          hintText.textContent = "Cada fallo consume un intento.";
+        }
+      } else if (state.mode === "won"){
+        statusText.textContent = "¡Completaste el tablero!";
+        hintText.textContent = "Presioná Reiniciar o Enter para otra partida.";
+      } else if (state.mode === "lost"){
+        statusText.textContent = "Partida finalizada.";
+        hintText.textContent = `Se mostraron hasta ${PEEK_ON_LOSS} dígitos siguientes en rojo.`;
+      }
+
+      updateBoardClasses();
+    }
+
+    function setDifficulty(level){
+      if (!["easy","normal","hard","god"].includes(level)) level = "normal";
+      state.difficulty = level;
+      localStorage.setItem(LS_KEYS.DIFF, level);
+
+      state.mistakesTotal = getDifficultyAttempts(level);
+      resetGame(true);
+    }
+
+    function startGame(){
+      if (!state.userCode){
+        setMessage("Falta configuración.", "Ingresá y guardá el código de usuario antes de iniciar.", "bad", "Bloqueado");
+        return;
+      }
+      if (state.mode === "playing") return;
+
+      state.currentIndex = START_INDEX;
+      state.mistakesRemaining = state.mistakesTotal;
+      state.lastRevealIndex = null;
+      state.peekIndices = [];
+
+      setMode("playing");
+
+      const extra = (state.mistakesTotal === 0 && !state.practiceMode)
+        ? "Modo Dios: un solo fallo termina la partida."
+        : "Empezá con el primer decimal después del punto.";
+
+      setMessage("¡Empezamos!", extra, null, "Jugando…");
+      updateUI();
+    }
+
+    function resetGame(quiet = false){
+      const prevMode = state.mode;
+
+      state.currentIndex = START_INDEX;
+      state.mistakesRemaining = state.mistakesTotal;
+      state.lastRevealIndex = null;
+      state.peekIndices = [];
+
+      setMode("idle");
+      renderBoard();
+
+      if (!quiet){
+        const extra = (prevMode === "won" || prevMode === "lost")
+          ? "Presioná Iniciar o Enter para una nueva partida."
+          : "Presioná Iniciar o Enter.";
+        setMessage("Reiniciado.", extra, null, "Esperando…");
+      } else {
+        setMessage("Listo.", "Dificultad aplicada. Presioná Iniciar o Enter.", null, "Esperando…");
+      }
+      updateUI();
+    }
+
+    function computePeekIndices(){
+      const start = state.currentIndex;
+      const endExclusive = Math.min(TOTAL_CELLS, start + PEEK_ON_LOSS);
+      const arr = [];
+      for (let i = start; i < endExclusive; i++) arr.push(i);
+      return arr;
+    }
+
+    function endGame(result, detail){
+      if (result === "won"){
+        setMode("won");
+        beep("ok");
+        setMessage("¡Ganaste!", `Completaste ${GUESSABLE_CELLS} decimales.`, "ok", "Victoria");
+      } else {
+        setMode("lost");
+        beep("bad");
+
+        state.peekIndices = computePeekIndices();
+        const peekDigits = state.peekIndices.map(i => state.boardDigits[i]).join("");
+        const shown = state.peekIndices.length;
+
+        setMessage(
+          detail?.title ?? "Fin del juego.",
+          shown > 0
+            ? `${detail?.text ?? ""} Siguientes ${shown} dígitos: ${peekDigits}`
+            : `${detail?.text ?? ""} No quedan dígitos por mostrar.`,
+          "bad",
+          "Derrota"
+        );
+      }
+
+      const score = getCorrectCount();
+      if (state.userCode && score > state.topScore){
+        state.topScore = score;
+        saveTopScoreForUser(state.userCode, state.topScore);
+        refreshRanking(); // NUEVO: actualizar “consulta”
+      }
+
+      updateUI();
+    }
+
+    function isDigitKey(e){
+      return e.key >= "0" && e.key <= "9";
+    }
+
+    function handleKeyPress(e){
+      if (!state.userCode){
+        if (e.key === "Enter"){
+          const active = document.activeElement;
+          if (active && active.id === "userCodeInput"){
+            e.preventDefault();
+            applyUserCodeFromInput();
+          }
+        }
+        return;
+      }
+
+      if (e.key === "Enter"){
+        e.preventDefault();
+        if (state.mode === "idle") startGame();
+        else if (state.mode === "won" || state.mode === "lost") resetGame(false);
+        return;
+      }
+
+      if (e.key === "Escape"){
+        e.preventDefault();
+        resetGame(false);
+        return;
+      }
+
+      if (state.mode === "playing"){
+        if (isDigitKey(e) || e.key === " " || e.key.startsWith("Arrow")){
+          e.preventDefault();
+        }
+      }
+
+      if (state.mode !== "playing"){
+        if (isDigitKey(e)){
+          setMessage("Aún no inició.", "Presioná Iniciar o Enter, y después escribí dígitos.", null, "Esperando…");
+          updateUI();
+        }
+        return;
+      }
+
+      if (!isDigitKey(e)) return;
+
+      const pressed = e.key;
+      const expected = state.boardDigits[state.currentIndex];
+
+      if (pressed === expected){
+        state.currentIndex++;
+        revealCell(state.currentIndex - 1);
+        beep("ok");
+
+        const remaining = (TOTAL_CELLS - state.currentIndex);
+        setMessage("¡Correcto!", `Ingresaste: ${pressed}. Te faltan ${Math.max(0, remaining)} casillas del tablero.`, "ok", "Acierto");
+
+        if (state.currentIndex >= TOTAL_CELLS){
+          endGame("won");
+          return;
+        }
+
+        updateUI();
+      } else {
+        beep("bad");
+        shakeBoard();
+
+        if (state.practiceMode){
+          setMessage("Casi…", `Ingresaste: ${pressed}. Intentá de nuevo (no consume intento).`, "bad", "Fallo");
+          updateUI();
+          return;
+        }
+
+        if (state.mistakesTotal === 0){
+          endGame("lost", { title: "Fallaste en modo Dios.", text: `Ingresaste: ${pressed}. Un fallo termina la partida.` });
+          return;
+        }
+
+        state.mistakesRemaining--;
+
+        if (state.mistakesRemaining <= 0){
+          endGame("lost", { title: "Se acabaron los intentos.", text: `Ingresaste: ${pressed}.` });
+          return;
+        }
+
+        setMessage("Incorrecto.", `Ingresaste: ${pressed}. Te quedan ${state.mistakesRemaining} intentos.`, "bad", "Fallo");
+        updateUI();
+      }
+    }
+
+    function applyUserCodeFromInput(){
+      const input = document.getElementById("userCodeInput");
+      const normalized = normalizeUserCode(input.value);
+
+      if (!normalized){
+        setMessage("Código inválido.", "Ingresá un código (letras/números; sin espacios).", "bad", "Bloqueado");
+        state.userCode = "";
+        state.topScore = 0;
+        document.getElementById("topScore").textContent = "0";
+        setLockedUI(true);
+        return;
+      }
+
+      state.userCode = normalized;
+      localStorage.setItem(LS_KEYS.LAST_USER, state.userCode);
+
+      state.topScore = loadTopScoreForUser(state.userCode);
+
+      setLockedUI(false);
+      setMessage("Código guardado.", `Usuario: ${state.userCode}. Top score cargado para este usuario.`, "ok", "Listo");
+
+      resetGame(true);
+      refreshRanking(); // cargar ranking al entrar
+    }
+
+    // ===== “Consulta” de ranking local =====
+    function listAllUserTopScores(){
+      const prefix = LS_KEYS.TOP_PREFIX;
+      const rows = [];
+
+      for (let i = 0; i < localStorage.length; i++){
+        const key = localStorage.key(i);
+        if (!key || !key.startsWith(prefix)) continue;
+
+        const user = key.slice(prefix.length);
+        const score = parseInt(localStorage.getItem(key) || "0", 10);
+        if (!user) continue;
+
+        rows.push({ user, score: clampInt(score, 0, 99999) });
+      }
+
+      return rows;
+    }
+
+    function refreshRanking(){
+      const body = document.getElementById("rankBody");
+      const search = (document.getElementById("rankSearch").value || "").trim().toLowerCase();
+
+      let rows = listAllUserTopScores();
+
+      if (search){
+        rows = rows.filter(r => r.user.toLowerCase().includes(search));
+      }
+
+      if (state.rankSort === "user_asc"){
+        rows.sort((a,b) => a.user.localeCompare(b.user));
+      } else {
+        rows.sort((a,b) => (b.score - a.score) || a.user.localeCompare(b.user));
+      }
+
+      body.innerHTML = "";
+      if (rows.length === 0){
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td class="mono" colspan="2" style="color: rgba(255,255,255,0.65);">Sin datos de ranking.</td>`;
+        body.appendChild(tr);
+        return;
+      }
+
+      for (const r of rows){
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td class="mono">${escapeHtml(r.user)}</td><td class="rightCell mono">${r.score}</td>`;
+        body.appendChild(tr);
+      }
+    }
+
+    function escapeHtml(s){
+      return String(s)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    function toggleRanking(){
+      const panel = document.getElementById("rankPanel");
+      const btn = document.getElementById("btnToggleRank");
+      const show = !panel.classList.contains("show");
+      panel.classList.toggle("show", show);
+      btn.textContent = show ? "Ocultar ranking" : "Ver ranking";
+      if (show) refreshRanking();
+    }
+
+    function clearRanking(){
+      const prefix = LS_KEYS.TOP_PREFIX;
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++){
+        const k = localStorage.key(i);
+        if (k && k.startsWith(prefix)) keysToRemove.push(k);
+      }
+      for (const k of keysToRemove) localStorage.removeItem(k);
+      refreshRanking();
+      setMessage("Ranking borrado.", "Se eliminaron los top scores guardados en este navegador.", null, "Listo");
+      state.topScore = state.userCode ? loadTopScoreForUser(state.userCode) : 0;
+      updateUI();
+    }
+
+    // ===== Init =====
+    function init(){
+      if (!/^\d+$/.test(PI_DECIMALS) || PI_DECIMALS.length < TOTAL_CELLS){
+        alert("Error: PI_DECIMALS debe contener solo dígitos y al menos " + TOTAL_CELLS + " caracteres.");
+        return;
+      }
+
+      state.boardDigits = PI_DECIMALS.slice(0, TOTAL_CELLS);
+
+      state.soundEnabled = (localStorage.getItem(LS_KEYS.SOUND) || "0") === "1";
+      state.showIndex = (localStorage.getItem(LS_KEYS.SHOW_INDEX) || "0") === "1";
+      state.practiceMode = (localStorage.getItem(LS_KEYS.PRACTICE) || "0") === "1";
+
+      const savedDiff = localStorage.getItem(LS_KEYS.DIFF);
+      state.difficulty = (savedDiff === "easy" || savedDiff === "hard" || savedDiff === "normal" || savedDiff === "god")
+        ? savedDiff
+        : "normal";
+
+      state.mistakesTotal = getDifficultyAttempts(state.difficulty);
+      state.mistakesRemaining = state.mistakesTotal;
+
+      document.getElementById("soundToggle").checked = state.soundEnabled;
+      document.getElementById("indexToggle").checked = state.showIndex;
+      document.getElementById("practiceToggle").checked = state.practiceMode;
+      document.getElementById("difficultySelect").value = state.difficulty;
+
+      document.getElementById("piTail").textContent = "";
+
+      state.currentIndex = START_INDEX;
+      state.peekIndices = [];
+      renderBoard();
+      setMode("idle");
+
+      setLockedUI(true);
+
+      const lastUser = normalizeUserCode(localStorage.getItem(LS_KEYS.LAST_USER) || "");
+      if (lastUser){
+        document.getElementById("userCodeInput").value = lastUser;
+      }
+
+      document.getElementById("btnSetUser").addEventListener("click", applyUserCodeFromInput);
+
+      document.getElementById("btnStart").addEventListener("click", startGame);
+      document.getElementById("btnReset").addEventListener("click", () => resetGame(false));
+      document.getElementById("btnToggleRank").addEventListener("click", toggleRanking);
+
+      document.getElementById("btnSortRank").addEventListener("click", () => {
+        state.rankSort = (state.rankSort === "score_desc") ? "user_asc" : "score_desc";
+        document.getElementById("btnSortRank").textContent =
+          (state.rankSort === "score_desc") ? "Ordenar: score ↓" : "Ordenar: usuario A→Z";
+        refreshRanking();
+      });
+
+      document.getElementById("btnClearRank").addEventListener("click", () => {
+        if (confirm("¿Desea borrar el ranking local (todos los usuarios) de este navegador?")) clearRanking();
+      });
+
+      document.getElementById("rankSearch").addEventListener("input", refreshRanking);
+
+      document.getElementById("difficultySelect").addEventListener("change", (e) => setDifficulty(e.target.value));
+
+      document.getElementById("soundToggle").addEventListener("change", (e) => {
+        state.soundEnabled = !!e.target.checked;
+        localStorage.setItem(LS_KEYS.SOUND, state.soundEnabled ? "1" : "0");
+        if (state.soundEnabled) ensureAudio();
+        updateUI();
+      });
+
+      document.getElementById("indexToggle").addEventListener("change", (e) => {
+        state.showIndex = !!e.target.checked;
+        localStorage.setItem(LS_KEYS.SHOW_INDEX, state.showIndex ? "1" : "0");
+        updateUI();
+      });
+
+      document.getElementById("practiceToggle").addEventListener("change", (e) => {
+        state.practiceMode = !!e.target.checked;
+        localStorage.setItem(LS_KEYS.PRACTICE, state.practiceMode ? "1" : "0");
+        updateUI();
+      });
+
+      window.addEventListener("keydown", handleKeyPress, { passive: false });
+
+      setMessage(
+        "Configuración requerida.",
+        "Ingresá el código de usuario. El tablero contiene 100 decimales (sin incluir el 3).",
+        null,
+        "Esperando…"
+      );
+      updateUI();
+    }
+
+    init();
+  </script>
+</body>
+</html>
